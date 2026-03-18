@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Auth</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+        :root {
+            --sun: #ffbf3c;
+            --orange: #ff6f3c;
+            --mint: #48dcb1;
+            --cyan: #1cc4f5;
+            --ink: #1f2430;
+            --panel: rgba(255, 255, 255, 0.9);
+            --field: #f5f9ff;
+            --field-border: #cfd9ec;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 18% 20%, rgba(255, 191, 60, 0.48), transparent 40%),
+                radial-gradient(circle at 82% 15%, rgba(28, 196, 245, 0.45), transparent 36%),
+                radial-gradient(circle at 78% 85%, rgba(72, 220, 177, 0.5), transparent 42%),
+                linear-gradient(140deg, #fff6d8 0%, #ffe0d3 38%, #dbf2ff 70%, #e3fff6 100%);
+            overflow: hidden;
+            font-family: 'Bricolage Grotesque', sans-serif;
+        }
+
+        .shape {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(4px);
+            z-index: 0;
+            animation: float 7s ease-in-out infinite;
+        }
+
+        .shape.one {
+            width: 180px;
+            height: 180px;
+            left: -40px;
+            top: 8%;
+            background: rgba(255, 111, 60, 0.4);
+        }
+
+        .shape.two {
+            width: 250px;
+            height: 250px;
+            right: -100px;
+            bottom: 7%;
+            background: rgba(28, 196, 245, 0.35);
+            animation-delay: 0.6s;
+        }
+
+        .auth-card {
+            position: relative;
+            z-index: 1;
+            width: min(420px, 100%);
+            background: var(--panel);
+            border: 2px solid rgba(255, 255, 255, 0.65);
+            border-radius: 24px;
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 24px 60px rgba(27, 36, 51, 0.2);
+            padding: 30px;
+            animation: rise 0.9s cubic-bezier(0.18, 0.72, 0.15, 1) forwards;
+            opacity: 0;
+            transform: translateY(24px) scale(0.98);
+        }
+
+        .switcher {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 6px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid #d9e4f7;
+            opacity: 0;
+            animation: fadeUp 0.6s ease-out 0.2s forwards;
+        }
+
+        .switch-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: transparent;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+            color: #3f4a63;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+        }
+
+        .switch-btn.active {
+            background: linear-gradient(90deg, rgba(255, 111, 60, 0.9), rgba(255, 191, 60, 0.9));
+            color: #1f2430;
+            transform: translateY(-1px);
+        }
+
+        .tagline {
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #ff6f3c;
+            margin-bottom: 8px;
+            opacity: 0;
+            animation: fadeUp 0.7s ease-out 0.25s forwards;
+        }
+
+        h1 {
+            font-size: clamp(1.8rem, 3vw, 2.3rem);
+            line-height: 1.15;
+            margin-bottom: 10px;
+            opacity: 0;
+            animation: fadeUp 0.7s ease-out 0.35s forwards;
+        }
+
+        .title-wrap {
+            min-height: 90px;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .title-wrap.swapping {
+            opacity: 0.2;
+            transform: translateY(-4px);
+        }
+
+        .subtitle {
+            color: #33415d;
+            margin-bottom: 24px;
+            opacity: 0;
+            animation: fadeUp 0.7s ease-out 0.45s forwards;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 14px;
+            opacity: 0;
+            animation: fadeUp 0.6s ease-out forwards;
+        }
+
+        .field:nth-of-type(1) {
+            animation-delay: 0.55s;
+        }
+
+        .field:nth-of-type(2) {
+            animation-delay: 0.65s;
+        }
+
+        .field:nth-of-type(3) {
+            animation-delay: 0.75s;
+        }
+
+        .field:nth-of-type(4) {
+            animation-delay: 0.85s;
+        }
+
+        label {
+            font-size: 0.94rem;
+            font-weight: 700;
+        }
+
+        input {
+            width: 100%;
+            border: 2px solid var(--field-border);
+            background: var(--field);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            color: #252b3f;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 4px rgba(28, 196, 245, 0.15);
+        }
+
+        .password-wrap {
+            position: relative;
+        }
+
+        .toggle-pass {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 0.78rem;
+            letter-spacing: 0.04em;
+            color: #2a7da5;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            margin-bottom: 18px;
+            font-size: 0.9rem;
+            opacity: 0;
+            animation: fadeUp 0.6s ease-out 0.75s forwards;
+        }
+
+        .row.tight {
+            margin-top: 2px;
+            margin-bottom: 16px;
+        }
+
+        .remember {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.9rem;
+        }
+
+        .remember input {
+            width: 16px;
+            height: 16px;
+            accent-color: #ff6f3c;
+        }
+
+        .link {
+            color: #2a7da5;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .action-btn {
+            width: 100%;
+            border: none;
+            border-radius: 14px;
+            padding: 13px 16px;
+            background: linear-gradient(90deg, var(--orange), var(--sun), var(--mint));
+            color: #222a3e;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            opacity: 0;
+            animation: fadeUp 0.65s ease-out 0.85s forwards;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(255, 111, 60, 0.28);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .forms-shell {
+            position: relative;
+            min-height: 385px;
+        }
+
+        .form-view {
+            position: absolute;
+            inset: 0;
+            display: block;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateX(26px) scale(0.98);
+            transition: opacity 0.45s cubic-bezier(0.2, 0.65, 0.2, 1),
+                transform 0.45s cubic-bezier(0.2, 0.65, 0.2, 1),
+                visibility 0s linear 0.45s;
+        }
+
+        .auth-card[data-view="signup"] #loginForm {
+            transform: translateX(-26px) scale(0.98);
+        }
+
+        .auth-card[data-view="login"] #signupForm {
+            transform: translateX(26px) scale(0.98);
+        }
+
+        .form-view.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateX(0) scale(1);
+            transition-delay: 0s;
+        }
+
+        .note {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #3e4a65;
+            opacity: 0;
+            animation: fadeUp 0.6s ease-out 0.95s forwards;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-18px);
+            }
+        }
+
+        @keyframes rise {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 520px) {
+            body {
+                padding: 14px;
+                overflow: auto;
+            }
+
+            .auth-card {
+                width: 100%;
+                padding: 22px;
+                border-radius: 20px;
+            }
+
+            .row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .forms-shell {
+                min-height: 430px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .auth-card {
+                padding: 18px;
+                border-radius: 18px;
+            }
+
+            h1 {
+                font-size: clamp(1.45rem, 6vw, 1.75rem);
+            }
+
+            .switch-btn {
+                padding: 9px 8px;
+                font-size: 0.73rem;
+            }
+
+            .action-btn {
+                padding: 12px 14px;
+            }
+
+            .title-wrap {
+                min-height: 82px;
+            }
+        }
+
+        @media (max-height: 760px) {
+            body {
+                align-items: start;
+                padding-block: 16px;
+                overflow: auto;
+            }
+
+            .auth-card {
+                margin-block: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <span class="shape one" aria-hidden="true"></span>
+    <span class="shape two" aria-hidden="true"></span>
+
+    <main class="auth-card" data-view="login">
+        <div class="switcher">
+            <button type="button" class="switch-btn active" id="loginTab">LOGIN</button>
+            <button type="button" class="switch-btn" id="signupTab">CREATE</button>
+        </div>
+
+        <div class="title-wrap">
+            <p class="tagline" id="taglineText">Welcome Back</p>
+            <h1 id="titleText">Login to your colorful space</h1>
+            <p class="subtitle" id="subtitleText">Use your account details to continue.</p>
+        </div>
+
+        <div class="forms-shell">
+            <form id="loginForm" class="form-view active">
+                <div class="field">
+                    <label for="loginEmail">Email</label>
+                    <input id="loginEmail" type="email" placeholder="you@example.com" required>
+                </div>
+
+                <div class="field">
+                    <label for="loginPassword">Password</label>
+                    <div class="password-wrap">
+                        <input id="loginPassword" type="password" placeholder="Enter your password" required>
+                        <button type="button" class="toggle-pass" data-target="loginPassword">SHOW</button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <label class="remember" for="remember">
+                        <input id="remember" type="checkbox">
+                        Remember me
+                    </label>
+                    <a href="#" class="link">Forgot password?</a>
+                </div>
+
+                <button class="action-btn" type="submit">Sign In</button>
+                <p class="note">Need a new account? <a href="#" class="link" id="goCreate">Create account</a></p>
+            </form>
+
+            <form id="signupForm" class="form-view">
+                <div class="field">
+                    <label for="fullName">Full Name</label>
+                    <input id="fullName" type="text" placeholder="Your name" required>
+                </div>
+
+                <div class="field">
+                    <label for="signupEmail">Email</label>
+                    <input id="signupEmail" type="email" placeholder="you@example.com" required>
+                </div>
+
+                <div class="field">
+                    <label for="signupPassword">Password</label>
+                    <div class="password-wrap">
+                        <input id="signupPassword" type="password" placeholder="Create a password" minlength="6"
+                            required>
+                        <button type="button" class="toggle-pass" data-target="signupPassword">SHOW</button>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <div class="password-wrap">
+                        <input id="confirmPassword" type="password" placeholder="Re-enter password" minlength="6"
+                            required>
+                        <button type="button" class="toggle-pass" data-target="confirmPassword">SHOW</button>
+                    </div>
+                </div>
+
+                <div class="row tight">
+                    <label class="remember" for="termsCheck">
+                        <input id="termsCheck" type="checkbox" required>
+                        I agree to terms
+                    </label>
+                </div>
+
+                <button class="action-btn" type="submit">Create Account</button>
+                <p class="note">Already have one? <a href="#" class="link" id="goLogin">Login now</a></p>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        const authCard = document.querySelector('.auth-card');
+        const loginTab = document.getElementById('loginTab');
+        const signupTab = document.getElementById('signupTab');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const goCreate = document.getElementById('goCreate');
+        const goLogin = document.getElementById('goLogin');
+        const taglineText = document.getElementById('taglineText');
+        const titleText = document.getElementById('titleText');
+        const subtitleText = document.getElementById('subtitleText');
+        const titleWrap = document.querySelector('.title-wrap');
+        const toggles = document.querySelectorAll('.toggle-pass');
+        let textSwapTimer;
+
+        function setView(view) {
+            const isLogin = view === 'login';
+
+            loginTab.classList.toggle('active', isLogin);
+            signupTab.classList.toggle('active', !isLogin);
+            loginForm.classList.toggle('active', isLogin);
+            signupForm.classList.toggle('active', !isLogin);
+            authCard.dataset.view = view;
+
+            titleWrap.classList.add('swapping');
+            clearTimeout(textSwapTimer);
+            textSwapTimer = setTimeout(() => {
+                taglineText.textContent = isLogin ? 'Welcome Back' : 'Join The Vibe';
+                titleText.textContent = isLogin ? 'Login to your colorful space' : 'Create your colorful account';
+                subtitleText.textContent = isLogin
+                    ? 'Use your account details to continue.'
+                    : 'Fill your details and start your journey.';
+                titleWrap.classList.remove('swapping');
+            }, 120);
+        }
+
+        loginTab.addEventListener('click', () => setView('login'));
+        signupTab.addEventListener('click', () => setView('signup'));
+        goCreate.addEventListener('click', (event) => {
+            event.preventDefault();
+            setView('signup');
+        });
+        goLogin.addEventListener('click', (event) => {
+            event.preventDefault();
+            setView('login');
+        });
+
+        toggles.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const input = document.getElementById(btn.dataset.target);
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                btn.textContent = isPassword ? 'HIDE' : 'SHOW';
+            });
+        });
+
+        loginForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            if (email) {
+                alert(`Welcome back, ${email}!`);
+            }
+        });
+
+        signupForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const name = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+
+            if (password !== confirm) {
+                alert('Passwords do not match.');
+                return;
+            }
+
+            alert(`Account created for ${name || email}!`);
+            signupForm.reset();
+            setView('login');
+        });
+    </script>
+</body>
+
+</html>
